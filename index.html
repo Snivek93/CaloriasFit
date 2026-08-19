@@ -66,7 +66,6 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .weight-input-wrap input { width:90px; background:var(--bg); border:none; border-radius:10px; padding:8px 10px; font-size:16px; font-weight:600; color:var(--text); }
 .weight-chart { height:130px; }
 .chart-card { background:var(--card); margin:16px; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); height:220px; }
-/* --- Panel inferior compacto expandible --- */
 .summary { position:fixed; bottom:0; left:0; width:100%; background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:16px 24px 28px; border-radius:24px 24px 0 0; box-shadow:0 -4px 24px rgba(0,0,0,.06); z-index:100; }
 .compact-row { display:flex; align-items:center; gap:12px; cursor:pointer; }
 .compact-kcal { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
@@ -85,7 +84,6 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .mini { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .mini .val { font-size:13px; font-weight:600; }
 .mini .lbl { font-size:11px; color:var(--text2); }
-/* --- Sheets --- */
 .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .3s; z-index:200; }
 .backdrop.open { opacity:1; pointer-events:auto; }
 .sheet { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:24px 24px 0 0; padding:20px 24px 40px; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); z-index:201; max-height:80vh; overflow-y:auto; }
@@ -106,6 +104,8 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .switch input:checked + .slider { background:var(--accent); }
 .switch input:checked + .slider:before { transform:translateX(20px); }
 .ios-step { display:flex; gap:10px; align-items:center; margin-bottom:12px; font-size:15px; }
+.backup-row { display:flex; gap:10px; flex-wrap:wrap; }
+.hint { font-size:12px; color:var(--text2); margin-top:8px; }
 @media(prefers-color-scheme:dark){
   :root { --bg:#000; --card:#1C1C1E; --text:#F5F5F7; --text2:#8E8E93; --accent-soft:rgba(48,209,88,.18); }
   .meal-content { background:#111; }
@@ -217,6 +217,15 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
   <div class="field">
     <label>Porciones objetivo por grupo (al día)</label>
     <div class="goals-grid" id="goalsGrid"></div>
+  </div>
+  <div class="field">
+    <label>Respaldo de datos</label>
+    <div class="backup-row">
+      <button class="pill" id="exportBtn">⬇ Exportar</button>
+      <button class="pill" id="importBtn">⬆ Importar</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+    <div class="hint">Incluye comidas, agua, peso y metas. Guarda el archivo en tu nube o archivos personales.</div>
   </div>
 </div>
 
@@ -564,6 +573,94 @@ copyBtn.onclick = ()=>{
   }
 };
 
+/* ---------- RESPALDO (EXPORTAR / IMPORTAR) ---------- */
+function exportBackup(){
+  const payload = {
+    app: "CaloriasFit",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    nutritionData: dataStore,
+    weightData: weightData,
+    goals: goals
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const filename = "caloriasfit-respaldo-" + getDS(new Date()) + ".json";
+
+  try {
+    const file = new File([json], filename, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: "Respaldo CaloríasFit" }).catch(()=>{});
+      return;
+    }
+  } catch(e){}
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+let pendingImport = null, importTimer = null;
+const importBtn = document.getElementById("importBtn");
+const importFile = document.getElementById("importFile");
+function resetImport(){ pendingImport = null; importBtn.textContent = "⬆ Importar"; importBtn.classList.remove("pending"); }
+
+document.getElementById("exportBtn").onclick = ()=>{ haptic(); exportBackup(); };
+
+importBtn.onclick = ()=>{
+  if (pendingImport){
+    applyImport(pendingImport);
+    resetImport();
+  } else {
+    importFile.click();
+  }
+};
+
+importFile.onchange = ()=>{
+  const f = importFile.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== "object" || (!data.nutritionData && !data.weightData && !data.goals)) throw 0;
+      pendingImport = data;
+      importBtn.textContent = "✓ ¿Reemplazar datos?";
+      importBtn.classList.add("pending");
+      clearTimeout(importTimer);
+      importTimer = setTimeout(resetImport, 4000);
+    } catch(e){
+      alert("El archivo no es un respaldo válido de CaloríasFit.");
+    }
+    importFile.value = "";
+  };
+  reader.readAsText(f);
+};
+
+function applyImport(data){
+  if (data.nutritionData) dataStore = data.nutritionData;
+  if (data.weightData) weightData = data.weightData;
+  if (data.goals){
+    goals = Object.assign({
+      kcal: 2000, water: 8, reminders: false,
+      groups: Object.assign({}, DEFAULT_GROUPS)
+    }, data.goals);
+    goals.groups = Object.assign({}, DEFAULT_GROUPS, data.goals.groups || {});
+  }
+  save();
+  localStorage.setItem("weightData", JSON.stringify(weightData));
+  saveGoals();
+  document.getElementById("goalInputSheet").value = goals.kcal;
+  document.getElementById("waterInputSheet").value = goals.water;
+  remSwitch.checked = goals.reminders;
+  if (goals.reminders && "Notification" in window && Notification.permission === "granted") startReminders();
+  buildGoalsInputs();
+  haptic();
+  render();
+}
+
 /* ---------- RECORDATORIOS ---------- */
 function notify(title, body){
   if(!("Notification" in window) || Notification.permission !== "granted") return;
@@ -623,8 +720,9 @@ remSwitch.onchange = ()=>{
 };
 if (goals.reminders && "Notification" in window && Notification.permission === "granted") startReminders();
 
-(function buildGoalsInputs(){
+function buildGoalsInputs(){
   const wrap = document.getElementById("goalsGrid");
+  wrap.innerHTML = "";
   for(const fn in foods){
     const div = document.createElement("div");
     div.className = "field";
@@ -637,7 +735,8 @@ if (goals.reminders && "Notification" in window && Notification.permission === "
     div.appendChild(label); div.appendChild(inp);
     wrap.appendChild(div);
   }
-})();
+}
+buildGoalsInputs();
 
 /* ---------- INSTALACIÓN PWA ---------- */
 let deferredPrompt = null;
