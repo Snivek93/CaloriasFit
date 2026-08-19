@@ -3,14 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Registro de comidas, macros, agua y peso con diseño minimalista.">
 <title>CaloríasFit</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#F5F5F7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CaloríasFit">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root { --bg:#F5F5F7; --card:#FFF; --text:#1D1D1F; --text2:#86868B; --accent:#34C759; --accent-soft:#E8F8EC; --radius:18px; --shadow:0 2px 12px rgba(0,0,0,.04); }
+:root { --bg:#F5F5F7; --card:#FFF; --text:#1D1D1F; --text2:#86868B; --accent:#34C759; --accent-soft:#E8F8EC; --blue:#0A84FF; --pink:#FF375F; --orange:#FF9F0A; --radius:18px; --shadow:0 2px 12px rgba(0,0,0,.04); }
 * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; -webkit-tap-highlight-color:transparent; }
-body { background:var(--bg); color:var(--text); padding-bottom:360px; }
+body { background:var(--bg); color:var(--text); padding-bottom:180px; }
 .header-image { width:100%; height:150px; object-fit:cover; border-radius:0 0 24px 24px; }
 .app-header { position:relative; }
 h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; letter-spacing:-0.5px; }
@@ -19,7 +25,7 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .day-nav button { background:var(--card); color:var(--accent); border:none; width:36px; height:36px; border-radius:50%; font-size:18px; font-weight:700; cursor:pointer; box-shadow:var(--shadow); transition:transform .15s; }
 .day-nav button:active { transform:scale(.9); }
 .day-nav input[type="date"] { border:none; background:var(--card); font-size:15px; font-weight:600; padding:8px 14px; border-radius:12px; box-shadow:var(--shadow); color:var(--text); }
-.quick-actions { display:flex; justify-content:center; gap:10px; margin-bottom:16px; }
+.quick-actions { display:flex; justify-content:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
 .pill { background:var(--card); border:none; border-radius:100px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--accent); box-shadow:var(--shadow); cursor:pointer; transition:transform .15s; }
 .pill:active { transform:scale(.95); }
 .pill.pending { background:var(--accent); color:#fff; }
@@ -41,25 +47,45 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .qty { min-width:22px; text-align:center; font-weight:600; font-size:15px; }
 .card { background:var(--card); margin:0 16px 14px; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 20px; }
 .card-title { font-size:15px; font-weight:600; margin-bottom:12px; }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.stat { background:var(--bg); border-radius:12px; padding:10px 4px; text-align:center; }
+.stat .big { font-size:18px; font-weight:700; }
+.stat .lbl { font-size:11px; color:var(--text2); margin-top:2px; }
 .groups-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-.chip { background:var(--bg); border-radius:12px; padding:8px 4px; text-align:center; font-size:12px; font-weight:600; color:var(--text2); transition:background .3s; }
+.chip { background:var(--bg); border-radius:12px; padding:8px 4px; text-align:center; font-size:12px; font-weight:600; color:var(--text2); }
 .chip .ico { display:block; font-size:16px; margin-bottom:2px; }
 .chip.done { background:var(--accent-soft); color:var(--accent); }
 .water-row { display:flex; gap:8px; flex-wrap:wrap; }
 .drop { font-size:24px; cursor:pointer; filter:grayscale(1) opacity(.25); transition:transform .2s, filter .2s; }
 .drop.on { filter:none; }
 .drop:active { transform:scale(1.25); }
+.weight-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.weight-now { font-size:26px; font-weight:700; }
+.weight-delta { font-size:12px; color:var(--text2); font-weight:600; margin-left:6px; }
+.weight-input-wrap { display:flex; gap:8px; align-items:center; }
+.weight-input-wrap input { width:90px; background:var(--bg); border:none; border-radius:10px; padding:8px 10px; font-size:16px; font-weight:600; color:var(--text); }
+.weight-chart { height:130px; }
 .chart-card { background:var(--card); margin:16px; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); height:220px; }
-.summary { position:fixed; bottom:0; left:0; width:100%; background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:20px 24px 32px; border-radius:24px 24px 0 0; box-shadow:0 -4px 24px rgba(0,0,0,.06); z-index:100; }
+/* --- Panel inferior compacto expandible --- */
+.summary { position:fixed; bottom:0; left:0; width:100%; background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:16px 24px 28px; border-radius:24px 24px 0 0; box-shadow:0 -4px 24px rgba(0,0,0,.06); z-index:100; }
+.compact-row { display:flex; align-items:center; gap:12px; cursor:pointer; }
+.compact-kcal { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
+.compact-sub { font-size:12px; color:var(--text2); }
+.compact-info { flex:1; }
+.sum-chevron { color:var(--text2); transition:transform .3s; }
+.summary.expanded .sum-chevron { transform:rotate(180deg); }
+.expanded-wrap { max-height:0; overflow:hidden; opacity:0; transition:max-height .4s cubic-bezier(.32,.72,0,1), opacity .3s; }
+.summary.expanded .expanded-wrap { max-height:340px; opacity:1; margin-top:16px; }
 .rings-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; }
 .big-ring { position:relative; width:120px; height:120px; }
 .big-ring .num { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-#totalKcal { font-size:34px; font-weight:700; letter-spacing:-1px; line-height:1; }
+#totalKcalBig { font-size:34px; font-weight:700; letter-spacing:-1px; line-height:1; }
 .goal-lbl { font-size:12px; color:var(--text2); margin-top:2px; }
 .mini-rings { display:flex; gap:22px; }
 .mini { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .mini .val { font-size:13px; font-weight:600; }
 .mini .lbl { font-size:11px; color:var(--text2); }
+/* --- Sheets --- */
 .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .3s; z-index:200; }
 .backdrop.open { opacity:1; pointer-events:auto; }
 .sheet { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:24px 24px 0 0; padding:20px 24px 40px; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); z-index:201; max-height:80vh; overflow-y:auto; }
@@ -69,8 +95,17 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 .done-btn { border:none; background:none; color:var(--accent); font-size:16px; font-weight:600; cursor:pointer; }
 .field { margin-bottom:14px; }
 .field label { font-size:13px; color:var(--text2); display:block; margin-bottom:6px; font-weight:500; }
-.field input { width:100%; background:var(--bg); border:none; border-radius:10px; padding:10px 12px; font-size:16px; font-weight:600; color:var(--text); }
+.field input[type="number"] { width:100%; background:var(--bg); border:none; border-radius:10px; padding:10px 12px; font-size:16px; font-weight:600; color:var(--text); }
 .goals-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.field-row { display:flex; justify-content:space-between; align-items:center; }
+.field-row label { margin:0; }
+.switch { position:relative; width:51px; height:31px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; inset:0; background:#E5E5EA; border-radius:100px; transition:.3s; cursor:pointer; }
+.slider:before { content:""; position:absolute; width:27px; height:27px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.3s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.switch input:checked + .slider { background:var(--accent); }
+.switch input:checked + .slider:before { transform:translateX(20px); }
+.ios-step { display:flex; gap:10px; align-items:center; margin-bottom:12px; font-size:15px; }
 @media(prefers-color-scheme:dark){
   :root { --bg:#000; --card:#1C1C1E; --text:#F5F5F7; --text2:#8E8E93; --accent-soft:rgba(48,209,88,.18); }
   .meal-content { background:#111; }
@@ -78,12 +113,13 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
   .controls button { background:#3A3A3C; }
   .summary { background:rgba(28,28,30,.88); }
   .sheet { background:#1C1C1E; }
+  .slider { background:#3A3A3C; }
 }
 </style>
 </head>
 <body>
 
-<img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80" class="header-image">
+<img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80" class="header-image" alt="">
 
 <div class="app-header">
   <h1>CaloríasFit</h1>
@@ -99,9 +135,15 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
 <div class="quick-actions">
   <button class="pill" id="todayBtn">Hoy</button>
   <button class="pill" id="copyBtn">⧉ Copiar ayer</button>
+  <button class="pill" id="installBtn" style="display:none">⤓ Instalar app</button>
 </div>
 
 <div id="meals"></div>
+
+<div class="card">
+  <div class="card-title">Resumen</div>
+  <div class="stats-grid" id="statsGrid"></div>
+</div>
 
 <div class="card">
   <div class="card-title">Grupos del día</div>
@@ -113,25 +155,48 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
   <div class="water-row" id="waterRow"></div>
 </div>
 
+<div class="card">
+  <div class="card-title">Peso corporal</div>
+  <div class="weight-row">
+    <div><span class="weight-now" id="weightNow">—</span><span class="weight-delta" id="weightDelta"></span></div>
+    <div class="weight-input-wrap">
+      <input type="number" step="0.1" inputmode="decimal" id="weightInput" placeholder="kg">
+      <button class="pill" id="weightSave">Registrar</button>
+    </div>
+  </div>
+  <div class="weight-chart"><canvas id="weightChart"></canvas></div>
+</div>
+
 <div class="chart-card"><canvas id="weeklyChart"></canvas></div>
 
-<div class="summary">
-  <div class="rings-wrap">
-    <div class="big-ring" id="bigRing">
-      <div class="num">
-        <div id="totalKcal">0</div>
-        <span class="goal-lbl">de <span id="goalLabel">2000</span> kcal</span>
-      </div>
+<div class="summary" id="summary">
+  <div class="compact-row" id="compactRow">
+    <div id="compactRingWrap"></div>
+    <div class="compact-info">
+      <div class="compact-kcal"><span id="totalKcalMini">0</span> kcal</div>
+      <div class="compact-sub">de <span id="goalLabel">2000</span> · <span id="pctLabel">0%</span></div>
     </div>
-    <div class="mini-rings">
-      <div class="mini"><div id="ringC"></div><div class="val" id="carbsTotal">0g</div><div class="lbl">Carbs</div></div>
-      <div class="mini"><div id="ringP"></div><div class="val" id="proteinTotal">0g</div><div class="lbl">Proteína</div></div>
-      <div class="mini"><div id="ringF"></div><div class="val" id="fatTotal">0g</div><div class="lbl">Grasas</div></div>
+    <svg class="sum-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="expanded-wrap">
+    <div class="rings-wrap">
+      <div class="big-ring" id="bigRing">
+        <div class="num">
+          <div id="totalKcalBig">0</div>
+          <span class="goal-lbl">kcal hoy</span>
+        </div>
+      </div>
+      <div class="mini-rings">
+        <div class="mini"><div id="ringC"></div><div class="val" id="carbsTotal">0g</div><div class="lbl">Carbs</div></div>
+        <div class="mini"><div id="ringP"></div><div class="val" id="proteinTotal">0g</div><div class="lbl">Proteína</div></div>
+        <div class="mini"><div id="ringF"></div><div class="val" id="fatTotal">0g</div><div class="lbl">Grasas</div></div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="backdrop" id="backdrop"></div>
+
 <div class="sheet" id="sheet">
   <div class="sheet-head">
     <div class="sheet-title">Ajustes</div>
@@ -145,10 +210,24 @@ h1 { text-align:center; margin:20px 0 14px; font-size:26px; font-weight:700; let
     <label>Meta de agua (vasos al día)</label>
     <input type="number" id="waterInputSheet" inputmode="numeric">
   </div>
+  <div class="field field-row">
+    <label>Recordatorios de comidas</label>
+    <span class="switch"><input type="checkbox" id="remSwitch"><span class="slider"></span></span>
+  </div>
   <div class="field">
     <label>Porciones objetivo por grupo (al día)</label>
     <div class="goals-grid" id="goalsGrid"></div>
   </div>
+</div>
+
+<div class="sheet" id="iosSheet">
+  <div class="sheet-head">
+    <div class="sheet-title">Instalar en iPhone</div>
+    <button class="done-btn" id="iosDoneBtn">Listo</button>
+  </div>
+  <div class="ios-step">1️⃣ Toca el botón <b>Compartir</b> en Safari.</div>
+  <div class="ios-step">2️⃣ Elige <b>"Agregar a pantalla de inicio"</b>.</div>
+  <div class="ios-step">3️⃣ Confirma y listo: CaloríasFit se abrirá como app nativa. 🎉</div>
 </div>
 
 <script>
@@ -168,15 +247,18 @@ const foods = {
 };
 const mealsList = ["Preentreno","Desayuno","Merienda Mañana","Almuerzo","Merienda Tarde","Cena"];
 const DEFAULT_GROUPS = { "Fruta":3,"Vegetal":4,"Carbohidrato":6,"Proteína Magra":4,"Proteína Media":2,"Grasa":3,"Fruto Seco":1,"Lácteo":2 };
+const REMINDER_TIMES = { "08:00":"Desayuno", "11:00":"Merienda Mañana", "14:00":"Almuerzo", "17:30":"Merienda Tarde", "21:00":"Cena" };
 
 let dataStore = JSON.parse(localStorage.getItem("nutritionData")) || {};
+let weightData = JSON.parse(localStorage.getItem("weightData")) || {};
 const savedGoals = JSON.parse(localStorage.getItem("planGoals") || "null") || {};
 let goals = {
   kcal: savedGoals.kcal || 2000,
   water: savedGoals.water || 8,
+  reminders: !!savedGoals.reminders,
   groups: Object.assign({}, DEFAULT_GROUPS, savedGoals.groups || {})
 };
-let chart = null;
+let chart = null, weightChart = null;
 
 const datePicker = document.getElementById("datePicker");
 function getDS(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -207,11 +289,15 @@ function createRing(size, stroke, color){
   svg.appendChild(track); svg.appendChild(prog);
   return { svg, set(p){ prog.style.strokeDashoffset = c * (1 - Math.min(p, 1)); } };
 }
+const compactRing = createRing(40, 5, "#34C759");
+document.getElementById("compactRingWrap").appendChild(compactRing.svg);
 const kcalRing = createRing(120, 12, "#34C759");
 document.getElementById("bigRing").prepend(kcalRing.svg);
 const ringC = createRing(44, 5, "#0A84FF"); document.getElementById("ringC").appendChild(ringC.svg);
 const ringP = createRing(44, 5, "#FF375F"); document.getElementById("ringP").appendChild(ringP.svg);
 const ringF = createRing(44, 5, "#FF9F0A"); document.getElementById("ringF").appendChild(ringF.svg);
+
+document.getElementById("compactRow").onclick = ()=> document.getElementById("summary").classList.toggle("expanded");
 
 function animateNumber(el, to){
   const from = parseInt(el.dataset.val || "0");
@@ -241,6 +327,20 @@ function dayTotals(date){
   let k=0,c=0,p=0,f=0;
   mealsList.forEach(m=>{ const t=mealTotals(date,m); k+=t.k; c+=t.c; p+=t.p; f+=t.f; });
   return {k,c,p,f};
+}
+function calcStats(){
+  let streak = 0;
+  const d = new Date();
+  if (dayTotals(getDS(d)).k === 0) d.setDate(d.getDate()-1);
+  while (dayTotals(getDS(d)).k > 0){ streak++; d.setDate(d.getDate()-1); }
+  let sum = 0, on = 0;
+  for(let i=0;i<7;i++){
+    const dd = new Date(); dd.setDate(dd.getDate()-i);
+    const k = dayTotals(getDS(dd)).k;
+    sum += k;
+    if (k >= goals.kcal*0.9 && k <= goals.kcal*1.1) on++;
+  }
+  return { streak, avg: Math.round(sum/7), adherence: Math.round(on/7*100) };
 }
 
 /* ---------- RENDER ---------- */
@@ -294,8 +394,10 @@ function render(){
     container.appendChild(mealDiv);
   });
 
+  updateStats();
   updateGroups();
   updateWater();
+  updateWeight();
   updateSummary();
   updateChart();
 }
@@ -310,9 +412,18 @@ function changeQty(date, meal, food, amt, qtySpan, header){
   const t = mealTotals(date, meal);
   header.querySelector(".meal-kcal").textContent = t.k + " kcal";
   header.querySelector(".meal-macros").textContent = `C:${t.c}g P:${t.p}g G:${t.f}g`;
+  updateStats();
   updateGroups();
   updateSummary();
   updateChart();
+}
+
+function updateStats(){
+  const s = calcStats();
+  document.getElementById("statsGrid").innerHTML = `
+    <div class="stat"><div class="big">🔥 ${s.streak}</div><div class="lbl">días de racha</div></div>
+    <div class="stat"><div class="big">${s.avg}</div><div class="lbl">kcal promedio (7d)</div></div>
+    <div class="stat"><div class="big">🎯 ${s.adherence}%</div><div class="lbl">adherencia a meta</div></div>`;
 }
 
 function updateGroups(){
@@ -350,10 +461,53 @@ function updateWater(){
   }
 }
 
+/* ---------- PESO ---------- */
+function updateWeight(){
+  const dates = Object.keys(weightData).sort();
+  const nowEl = document.getElementById("weightNow");
+  const deltaEl = document.getElementById("weightDelta");
+  const input = document.getElementById("weightInput");
+
+  if (dates.length){
+    const last = weightData[dates[dates.length-1]];
+    nowEl.textContent = last + " kg";
+    if (document.activeElement !== input) input.value = last;
+    if (dates.length >= 2){
+      const prev = weightData[dates[dates.length-2]];
+      const diff = Math.round((last - prev) * 10) / 10;
+      deltaEl.textContent = (diff > 0 ? "↑ +" : diff < 0 ? "↓ " : "= ") + diff + " kg";
+    } else deltaEl.textContent = "";
+  } else { nowEl.textContent = "—"; deltaEl.textContent = ""; }
+
+  const entries = dates.slice(-14);
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(document.getElementById("weightChart").getContext("2d"), {
+    type: "line",
+    data: {
+      labels: entries.map(ds => { const p = ds.split("-"); return (+p[2]) + "/" + (+p[1]); }),
+      datasets: [{ data: entries.map(ds => weightData[ds]), borderColor: "#0A84FF", backgroundColor: "rgba(10,132,255,.12)", borderWidth: 3, pointRadius: 3, pointBackgroundColor: "#0A84FF", fill: true, tension: .3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: false, grid: { display: false } } } }
+  });
+}
+
+document.getElementById("weightSave").onclick = ()=>{
+  const val = parseFloat(document.getElementById("weightInput").value.replace(",", "."));
+  if (!val || val < 20 || val > 400) return;
+  weightData[getDS(new Date())] = val;
+  localStorage.setItem("weightData", JSON.stringify(weightData));
+  haptic();
+  updateWeight();
+};
+
+/* ---------- RESUMEN (ANILLOS) ---------- */
 function updateSummary(){
   const t = dayTotals(datePicker.value);
-  animateNumber(document.getElementById("totalKcal"), t.k);
+  animateNumber(document.getElementById("totalKcalMini"), t.k);
+  animateNumber(document.getElementById("totalKcalBig"), t.k);
   document.getElementById("goalLabel").textContent = goals.kcal;
+  document.getElementById("pctLabel").textContent = Math.round((t.k/goals.kcal)*100) + "%";
+  compactRing.set(t.k / goals.kcal);
   kcalRing.set(t.k / goals.kcal);
   const cg = Math.round(goals.kcal*0.4/4), pg = Math.round(goals.kcal*0.3/4), fg = Math.round(goals.kcal*0.3/9);
   ringC.set(t.c/cg); ringP.set(t.p/pg); ringF.set(t.f/fg);
@@ -380,7 +534,7 @@ function updateChart(){
   });
 }
 
-/* ---------- NAVEGACIÓN Y ACCIONES ---------- */
+/* ---------- NAVEGACIÓN ---------- */
 function changeDay(off){
   const p = datePicker.value.split("-");
   const d = new Date(p[0], p[1]-1, p[2]);
@@ -389,7 +543,6 @@ function changeDay(off){
   render();
 }
 datePicker.addEventListener("change", render);
-
 document.getElementById("todayBtn").onclick = ()=>{ datePicker.value = getDS(new Date()); render(); };
 
 let copyPending = false, copyTimer = null;
@@ -411,19 +564,64 @@ copyBtn.onclick = ()=>{
   }
 };
 
-/* ---------- HOJA DE AJUSTES ---------- */
+/* ---------- RECORDATORIOS ---------- */
+function notify(title, body){
+  if(!("Notification" in window) || Notification.permission !== "granted") return;
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready.then(reg => reg.showNotification(title, { body, icon: "icon-192.png" })).catch(()=>{});
+  } else {
+    try { new Notification(title, { body }); } catch(e){}
+  }
+}
+function checkReminders(){
+  const now = new Date();
+  const hm = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+  const meal = REMINDER_TIMES[hm];
+  if (!meal) return;
+  const date = getDS(now);
+  const key = date + "T" + hm;
+  const notified = JSON.parse(localStorage.getItem("notified") || "{}");
+  if (notified[key]) return;
+  const q = (dataStore[date] && dataStore[date][meal]) ? Object.values(dataStore[date][meal]).reduce((a,b)=>a+(b||0),0) : 0;
+  if (q > 0) return;
+  notified[key] = 1;
+  localStorage.setItem("notified", JSON.stringify(notified));
+  notify("CaloríasFit", "Hora de tu " + meal + " 🍽️");
+}
+let remInterval = null;
+function startReminders(){
+  if (remInterval) return;
+  remInterval = setInterval(checkReminders, 30000);
+  checkReminders();
+}
+
+/* ---------- SHEETS ---------- */
 const sheet = document.getElementById("sheet");
+const iosSheet = document.getElementById("iosSheet");
 const backdrop = document.getElementById("backdrop");
-function openSheet(){ sheet.classList.add("open"); backdrop.classList.add("open"); }
-function closeSheet(){ sheet.classList.remove("open"); backdrop.classList.remove("open"); }
-document.getElementById("gearBtn").onclick = openSheet;
-document.getElementById("doneBtn").onclick = closeSheet;
-backdrop.onclick = closeSheet;
+function closeSheets(){ sheet.classList.remove("open"); iosSheet.classList.remove("open"); backdrop.classList.remove("open"); }
+document.getElementById("gearBtn").onclick = ()=>{ sheet.classList.add("open"); backdrop.classList.add("open"); };
+document.getElementById("doneBtn").onclick = closeSheets;
+document.getElementById("iosDoneBtn").onclick = closeSheets;
+backdrop.onclick = closeSheets;
 
 document.getElementById("goalInputSheet").value = goals.kcal;
 document.getElementById("waterInputSheet").value = goals.water;
 document.getElementById("goalInputSheet").oninput = (e)=>{ goals.kcal = parseInt(e.target.value)||2000; saveGoals(); updateSummary(); };
 document.getElementById("waterInputSheet").oninput = (e)=>{ goals.water = Math.min(15, Math.max(1, parseInt(e.target.value)||8)); saveGoals(); updateWater(); };
+
+const remSwitch = document.getElementById("remSwitch");
+remSwitch.checked = goals.reminders;
+remSwitch.onchange = ()=>{
+  if (remSwitch.checked){
+    if (!("Notification" in window)){ alert("Tu navegador no soporta notificaciones."); remSwitch.checked = false; return; }
+    Notification.requestPermission().then(p=>{
+      if (p === "granted"){ goals.reminders = true; saveGoals(); startReminders(); }
+      else { goals.reminders = false; remSwitch.checked = false; saveGoals(); }
+    });
+  } else { goals.reminders = false; saveGoals(); }
+};
+if (goals.reminders && "Notification" in window && Notification.permission === "granted") startReminders();
 
 (function buildGoalsInputs(){
   const wrap = document.getElementById("goalsGrid");
@@ -440,6 +638,29 @@ document.getElementById("waterInputSheet").oninput = (e)=>{ goals.water = Math.m
     wrap.appendChild(div);
   }
 })();
+
+/* ---------- INSTALACIÓN PWA ---------- */
+let deferredPrompt = null;
+const installBtn = document.getElementById("installBtn");
+const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+if (isiOS) installBtn.style.display = "inline-flex";
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = "inline-flex";
+});
+window.addEventListener("appinstalled", ()=>{ installBtn.style.display = "none"; });
+installBtn.onclick = async ()=>{
+  if (deferredPrompt){
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = "none";
+  } else if (isiOS){
+    iosSheet.classList.add("open");
+    backdrop.classList.add("open");
+  }
+};
 
 render();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
