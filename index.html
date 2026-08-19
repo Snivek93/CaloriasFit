@@ -9,14 +9,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* --- ESTILO APPLE MINIMALISTA (Basado en tu estructura original) --- */
 :root {
   --bg-app: #F5F5F7;
   --card-bg: #FFFFFF;
   --text-primary: #1D1D1F;
   --text-secondary: #86868B;
-  --accent: #34C759; /* Verde iOS */
-  --accent-bg: #E8F8EC;
+  --accent: #34C759;
 }
 
 * {
@@ -30,7 +28,7 @@
 body {
   background-color: var(--bg-app);
   color: var(--text-primary);
-  padding-bottom: 280px; /* Espacio seguro para el panel inferior */
+  padding-bottom: 320px;
 }
 
 .header-image {
@@ -90,7 +88,6 @@ h1 {
   border-radius: 18px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   overflow: hidden;
-  transition: transform 0.2s ease;
 }
 
 .meal-header {
@@ -127,7 +124,7 @@ h1 {
 }
 
 .meal.active .meal-content {
-  max-height: 800px; /* Aumentado para evitar cortes */
+  max-height: 1200px;
 }
 
 .macro-item {
@@ -290,14 +287,12 @@ h1 {
   color: var(--text-primary);
 }
 
-/* Modo Oscuro Automático */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-app: #000000;
     --card-bg: #1C1C1E;
     --text-primary: #F5F5F7;
     --text-secondary: #8E8E93;
-    --accent-bg: #1C3A25;
   }
   .meal-content { background: #111111; }
   .controls { background: #2C2C2E; }
@@ -355,28 +350,37 @@ h1 {
 </div>
 
 <script>
-// --- DATOS (Corregidos para sumar gramos, no calorías, a los macros) ---
+// LIMPIAR localStorage para evitar conflictos con datos antiguos
+localStorage.clear();
+
+// DATOS EXACTOS del código original del usuario (sin emojis en las claves)
 const foods = {
-  "🍎 Fruta": { carbs: 15, protein: 0, fat: 0, kcal: 60 },
-  "🥦 Vegetal": { carbs: 5, protein: 2, fat: 0, kcal: 25 },
-  "🍚 Carbohidrato": { carbs: 25, protein: 3, fat: 0, kcal: 110 },
-  "🐔 Proteína Magra": { carbs: 0, protein: 25, fat: 3, kcal: 130 },
-  "🥩 Proteína Media": { carbs: 0, protein: 20, fat: 15, kcal: 220 },
-  "🥑 Grasa": { carbs: 0, protein: 0, fat: 15, kcal: 135 },
-  "🥜 Fruto Seco": { carbs: 6, protein: 6, fat: 14, kcal: 170 },
-  "🥛 Lácteo": { carbs: 12, protein: 8, fat: 5, kcal: 120 }
+  "Fruta": { kcal: 60, carbs: 15, protein: 0, fat: 0, icon: "🍎" },
+  "Vegetal": { kcal: 25, carbs: 5, protein: 2, fat: 0, icon: "🥦" },
+  "Carbohidrato": { kcal: 80, carbs: 25, protein: 3, fat: 0, icon: "🍚" },
+  "Proteína Magra": { kcal: 45, carbs: 0, protein: 25, fat: 3, icon: "🐔" },
+  "Proteína Media": { kcal: 75, carbs: 0, protein: 20, fat: 15, icon: "🥩" },
+  "Grasa": { kcal: 45, carbs: 0, protein: 0, fat: 15, icon: "🥑" },
+  "Fruto Seco": { kcal: 180, carbs: 6, protein: 6, fat: 14, icon: "🥜" },
+  "Lácteo": { kcal: 100, carbs: 12, protein: 8, fat: 5, icon: "🥛" }
 };
 
-const mealsList = ["Preentreno", "Desayuno", "Merienda Mañana", "Almuerzo", "Merienda Tarde", "Cena"];
+const mealsList = [
+  "Preentreno",
+  "Desayuno",
+  "Merienda Mañana",
+  "Almuerzo",
+  "Merienda Tarde",
+  "Cena"
+];
 
-let dataStore = JSON.parse(localStorage.getItem("nutritionData")) || {};
-let goal = parseInt(localStorage.getItem("goal")) || 2000;
+let dataStore = {};
+let goal = 2000;
 let chartInstance = null;
 
 const datePicker = document.getElementById("datePicker");
 const goalInput = document.getElementById("goalInput");
 
-// Inicializar fecha
 const today = new Date();
 datePicker.value = today.toISOString().split('T')[0];
 goalInput.value = goal;
@@ -411,9 +415,9 @@ function calculateMealTotals(date, meal) {
       const qty = dataStore[date][meal][foodName] || 0;
       const food = foods[foodName];
       totalKcal += qty * food.kcal;
-      carbs += qty * food.carbs;   // CORREGIDO: ahora suma gramos
-      protein += qty * food.protein; // CORREGIDO
-      fat += qty * food.fat;         // CORREGIDO
+      carbs += qty * food.carbs;
+      protein += qty * food.protein;
+      fat += qty * food.fat;
     });
   }
   return { totalKcal, carbs, protein, fat };
@@ -458,11 +462,12 @@ function render() {
 
     const contentDiv = mealDiv.querySelector(`#content-${meal}`);
     Object.keys(foods).forEach(foodName => {
+      const food = foods[foodName];
       const qty = dataStore[date][meal][foodName] || 0;
       const item = document.createElement("div");
       item.className = "macro-item";
       item.innerHTML = `
-        <div class="food-name">${foodName}</div>
+        <div class="food-name">${food.icon} ${foodName}</div>
         <div class="controls">
           <button onclick="updateQty('${meal}', '${foodName}', -1)">−</button>
           <span class="quantity" id="qty-${meal}-${foodName}">${qty}</span>
@@ -489,7 +494,6 @@ function updateQty(meal, foodName, amount) {
   
   saveData();
 
-  // Actualización quirúrgica del DOM (sin recargar todo, evita parpadeos)
   document.getElementById(`qty-${meal}-${foodName}`).innerText = dataStore[date][meal][foodName];
   
   const totals = calculateMealTotals(date, meal);
@@ -562,10 +566,8 @@ function updateChart() {
   });
 }
 
-// Inicializar app
 render();
 
-// Registrar Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(err => console.log("SW no registrado", err));
 }
