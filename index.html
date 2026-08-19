@@ -1,27 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vida Saludable</title>
-
-<link rel="stylesheet" href="styles.css">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1f8f6b">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-
-<body>
-
-<img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352" class="header-image">
-
-<h1>🥗 Vida Saludable</h1>
-
-<div class="day-nav">
-  <button onclick="changeDay(-1)">◀</button>
-  <input type="date" id="datePicker">
-  <button onclick="changeDay(1)">▶</button>
+<!-- Dentro del <body> -->
+<div class="header-container">
+  <h1>CaloríasFit</h1>
+  <div class="day-nav">
+    <button onclick="changeDay(-1)">‹</button>
+    <input type="date" id="datePicker">
+    <button onclick="changeDay(1)">›</button>
+  </div>
 </div>
 
 <div id="meals"></div>
@@ -37,291 +21,24 @@
   </div>
 
   <div class="macro-summary">
-    <div class="macro-box left">
-      <div class="macro-title">🍚 Carbohidratos</div>
-      <div id="carbsTotal" class="macro-value">0</div>
+    <div class="macro-box">
+      <div class="macro-title">Carbohidratos</div>
+      <div id="carbsTotal" class="macro-value">0g</div>
     </div>
-
-    <div class="macro-box center">
-      <div class="macro-title">🍗 Proteína</div>
-      <div id="proteinTotal" class="macro-value">0</div>
+    <div class="macro-box">
+      <div class="macro-title">Proteína</div>
+      <div id="proteinTotal" class="macro-value">0g</div>
     </div>
-
-    <div class="macro-box right">
-      <div class="macro-title">🥑 Grasas</div>
-      <div id="fatTotal" class="macro-value">0</div>
+    <div class="macro-box">
+      <div class="macro-title">Grasas</div>
+      <div id="fatTotal" class="macro-value">0g</div>
     </div>
   </div>
 
   <div class="goal-row">
-    Meta:
-    <input type="number" id="goalInput" class="goal-input">
-    kcal
+    Meta: <input type="number" id="goalInput" class="goal-input" value="2000"> kcal
   </div>
-
   <div class="progress-container">
     <div class="progress-bar" id="progressBar"></div>
   </div>
 </div>
-
-<script>
-
-const foods = {
-  "Fruta": { kcal:60, macro:"Carbs", icon:"🍎", color:"#f39c12" },
-  "Vegetal": { kcal:25, macro:"Carbs", icon:"🥦", color:"#27ae60" },
-  "Carbohidrato": { kcal:80, macro:"Carbs", icon:"🍚", color:"#f1c40f" },
-  "Proteína Magra": { kcal:45, macro:"Protein", icon:"🐔", color:"#3498db" },
-  "Proteína Media": { kcal:75, macro:"Protein", icon:"🥩", color:"#2980b9" },
-  "Grasa": { kcal:45, macro:"Fat", icon:"🥑", color:"#e67e22" },
-  "Fruto Seco": { kcal:180, macro:"Fat", icon:"🥜", color:"#8e6e53" },
-  "Lácteo": { kcal:100, macro:"Fat", icon:"🥛", color:"#9b59b6" }
-};
-
-const mealsList = [
-  "Preentreno",
-  "Desayuno",
-  "Merienda Mañana",
-  "Almuerzo",
-  "Merienda Tarde",
-  "Cena"
-];
-
-let dataStore = JSON.parse(localStorage.getItem("nutritionData")) || {};
-let goal = localStorage.getItem("goal") || 2000;
-let chart;
-
-const datePicker = document.getElementById("datePicker");
-datePicker.valueAsDate = new Date();
-document.getElementById("goalInput").value = goal;
-
-function getLocalDateString(date){
-  return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,'0')+"-"+String(date.getDate()).padStart(2,'0');
-}
-
-function changeDay(offset){
-  const parts = datePicker.value.split("-");
-  const d = new Date(parts[0], parts[1]-1, parts[2]);
-  d.setDate(d.getDate() + offset);
-  datePicker.value = getLocalDateString(d);
-  render();
-}
-
-datePicker.addEventListener("change", render);
-
-document.getElementById("goalInput").addEventListener("input", e=>{
-  goal = e.target.value;
-  localStorage.setItem("goal", goal);
-  updateSummary();
-});
-
-function saveData(){
-  localStorage.setItem("nutritionData", JSON.stringify(dataStore));
-}
-
-function calculateMealTotals(date, meal){
-
-  if(!dataStore[date] || !dataStore[date][meal]) {
-    return {totalKcal:0, carbs:0, protein:0, fat:0};
-  }
-
-  let totalKcal=0, carbs=0, protein=0, fat=0;
-
-  Object.keys(foods).forEach(food=>{
-    let qty = dataStore[date][meal][food] || 0;
-    let kcal = qty * foods[food].kcal;
-    totalKcal += kcal;
-
-    if(foods[food].macro==="Carbs") carbs += kcal;
-    if(foods[food].macro==="Protein") protein += kcal;
-    if(foods[food].macro==="Fat") fat += kcal;
-  });
-
-  return {totalKcal, carbs, protein, fat};
-}
-
-function calculateTotals(date){
-
-  if(!dataStore[date]){
-    return {totalKcal:0, carbs:0, protein:0, fat:0};
-  }
-
-  let totalKcal=0, carbs=0, protein=0, fat=0;
-
-  mealsList.forEach(meal=>{
-    let t = calculateMealTotals(date, meal);
-    totalKcal += t.totalKcal;
-    carbs += t.carbs;
-    protein += t.protein;
-    fat += t.fat;
-  });
-
-  return {totalKcal, carbs, protein, fat};
-}
-
-function render(){
-
-  const date = datePicker.value;
-  if(!dataStore[date]) dataStore[date] = {};
-
-  const container = document.getElementById("meals");
-  container.innerHTML = "";
-
-  mealsList.forEach(meal=>{
-
-    if(!dataStore[date][meal]) dataStore[date][meal] = {};
-
-    let totals = calculateMealTotals(date, meal);
-
-    let mealDiv = document.createElement("div");
-    mealDiv.className="meal";
-
-    let header = document.createElement("div");
-    header.className="meal-header";
-
-    header.innerHTML = `
-      <div class="meal-left">${meal}</div>
-      <div class="meal-right">
-        <span id="kcal-${meal}">${totals.totalKcal}</span> kcal
-        <div class="meal-macros" id="macros-${meal}">
-          C:${totals.carbs} P:${totals.protein} G:${totals.fat}
-        </div>
-      </div>
-    `;
-
-    header.onclick=()=> mealDiv.classList.toggle("active");
-
-    let content=document.createElement("div");
-    content.className="meal-content";
-
-    Object.keys(foods).forEach(foodName=>{
-
-      let food=foods[foodName];
-
-      let item=document.createElement("div");
-      item.className="macro-item";
-
-      item.innerHTML=`
-        <div style="color:${food.color};font-weight:500;">
-          ${food.icon} ${foodName}
-        </div>
-        <div class="controls">
-          <button onclick="update('${meal}','${foodName}',-1)">-</button>
-          <span id="${meal}-${foodName}">${dataStore[date][meal][foodName] || 0}</span>
-          <button onclick="update('${meal}','${foodName}',1)">+</button>
-        </div>
-      `;
-
-      content.appendChild(item);
-    });
-
-    mealDiv.appendChild(header);
-    mealDiv.appendChild(content);
-    container.appendChild(mealDiv);
-  });
-
-  updateSummary();
-  updateChart();
-}
-
-function update(meal,food,amount){
-
-  const date=datePicker.value;
-
-  if(!dataStore[date]) dataStore[date]={};
-  if(!dataStore[date][meal]) dataStore[date][meal]={};
-
-  dataStore[date][meal][food]=Math.max(0,(dataStore[date][meal][food]||0)+amount);
-
-  saveData();
-
-  document.getElementById(`${meal}-${food}`).innerText =
-    dataStore[date][meal][food];
-
-  updateMealHeader(meal);
-  updateSummary();
-  updateChart();
-}
-
-function updateMealHeader(meal){
-  const date=datePicker.value;
-  const totals = calculateMealTotals(date, meal);
-
-  document.getElementById(`kcal-${meal}`).innerText = totals.totalKcal;
-  document.getElementById(`macros-${meal}`).innerText =
-    `C:${totals.carbs} P:${totals.protein} G:${totals.fat}`;
-}
-
-function updateSummary(){
-  const date=datePicker.value;
-  let totals=calculateTotals(date);
-
-  document.getElementById("totalKcal").innerText=totals.totalKcal;
-  document.getElementById("carbsTotal").innerText = totals.carbs;
-  document.getElementById("proteinTotal").innerText = totals.protein;
-  document.getElementById("fatTotal").innerText = totals.fat;
-
-  let percent=(totals.totalKcal/goal)*100;
-  document.getElementById("progressBar").style.width=Math.min(percent,100)+"%";
-}
-
-function updateChart(){
-
-  const ctx = document.getElementById("weeklyChart").getContext("2d");
-
-  let labels = [];
-  let values = [];
-
-  const parts = datePicker.value.split("-");
-  const today = new Date(parts[0], parts[1]-1, parts[2]);
-
-  for(let i=6;i>=0;i--){
-    let d = new Date(today);
-    d.setDate(today.getDate()-i);
-    let ds = getLocalDateString(d);
-
-    labels.push(d.getDate()+"/"+(d.getMonth()+1));
-
-    let totals = calculateTotals(ds);
-    values.push(totals.totalKcal);
-  }
-
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        data: values,
-        borderColor: "#1f8f6b",
-        backgroundColor: "rgba(31,143,107,0.2)",
-        borderWidth: 3,
-        pointRadius: 4,
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display:false } },
-        y: { grid: { display:false }, beginAtZero:true }
-      }
-    }
-  });
-}
-
-render();
-
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
-</script>
-
-</body>
-</html>
-
