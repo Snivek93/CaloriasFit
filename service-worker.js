@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caloriasfit-v3';
+const CACHE_NAME = 'caloriasfit-v4';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -21,6 +21,9 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
+  // NO interceptar APIs externas (OpenFoodFacts, CDNs): las maneja el navegador directo.
+  if (new URL(req.url).origin !== self.location.origin) return;
+
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -40,7 +43,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        if (res && res.ok && new URL(req.url).origin === self.location.origin) {
+        if (res && res.ok) {
           const copy = res.clone();
           caches.open(CACHE_NAME).then((c) => c.put(req, copy));
         }
