@@ -89,6 +89,54 @@ function matchesQuery(text, query){
   return words.every(w => t.includes(w));
 }
 
+/* ---------- ICONOS (badges de color estilo Apple Health) ---------- */
+const ICON_PATHS = {
+  apple:      `<circle cx="12" cy="13.5" r="6.5"/><path d="M12 7c0-1.2.8-2.2 2-2.5"/>`,
+  leaf:       `<path d="M11 20A7 7 0 0 1 4 13c0-4 3-7 7-7 1 0 2 .2 2.8.6C15 4 17 3 19 3c0 3-1.5 5-3.6 6.1A7 7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>`,
+  bowl:       `<path d="M4 12h16"/><path d="M5 12a7 7 0 0 0 14 0"/><path d="M12 4v4"/>`,
+  drumstick:  `<path d="M15.6 8.4a4.24 4.24 0 1 0-6-6 8.5 8.5 0 0 0-2.46 7.24c.13.96-.22 1.94-.94 2.67l-1.65 1.65a3.54 3.54 0 1 0 5 5l1.65-1.65c.72-.72 1.71-1.07 2.67-.94a8.5 8.5 0 0 0 7.24-2.46 4.24 4.24 0 1 0-6-6"/>`,
+  droplet:    `<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>`,
+  acorn:      `<path d="M12 3c3 0 5 2 5 5 0 1-.3 2-1 3l-4 8-4-8c-.7-1-1-2-1-3 0-3 2-5 5-5Z"/><path d="M8 8h8"/>`,
+  milk:       `<path d="M9 2h6"/><path d="M9 2v3.3a2 2 0 0 1-.6 1.4L7 8.3A2 2 0 0 0 6.4 9.7V20a1 1 0 0 0 1 1h9.2a1 1 0 0 0 1-1V9.7a2 2 0 0 0-.6-1.4l-1.4-1.6a2 2 0 0 1-.6-1.4V2"/>`,
+  star:       `<path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/>`,
+  plate:      `<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>`,
+  search:     `<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>`,
+  basket:     `<path d="M4 10h16l-1.5 9a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 10Z"/><path d="M8 10 12 4l4 6"/>`,
+  scale:      `<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>`,
+  calendar:   `<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16"/><path d="M8 3v4M16 3v4"/>`,
+  database:   `<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/>`,
+  globe:      `<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9Z"/>`,
+  package:    `<path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>`,
+  signal:     `<path d="M2 12a15 15 0 0 1 20 0"/><path d="M5 15.5a10 10 0 0 1 14 0"/><path d="M8.5 19a5 5 0 0 1 7 0"/><circle cx="12" cy="22" r="1"/>`
+};
+const GROUP_META = {
+  "Fruta":          { color:"#FF3B30", icon:"apple" },
+  "Vegetal":        { color:"#34C759", icon:"leaf" },
+  "Carbohidrato":   { color:"#FF9500", icon:"bowl" },
+  "Proteína Magra": { color:"#0A84FF", icon:"drumstick" },
+  "Proteína Media": { color:"#5E5CE6", icon:"drumstick" },
+  "Grasa":          { color:"#D4A017", icon:"droplet" },
+  "Fruto Seco":     { color:"#A2703A", icon:"acorn" },
+  "Lácteo":         { color:"#0091C2", icon:"milk" }
+};
+function hexToRgba(hex, a){
+  const h = hex.replace("#","");
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+function iconSvg(name){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]||""}</svg>`;
+}
+function groupIconHTML(name, size){
+  const meta = GROUP_META[name];
+  if (!meta) return "";
+  const cls = size === "sm" ? "grp-badge sm" : "grp-badge";
+  return `<span class="${cls}" style="--ic:${meta.color};--ic-bg:${hexToRgba(meta.color,0.14)}">${iconSvg(meta.icon)}</span>`;
+}
+function emptyIconHTML(name){
+  return `<span class="e-ico">${iconSvg(name)}</span>`;
+}
+
 /* ---------- SNACKBAR ---------- */
 let snackTimer = null;
 function snack(msg, actionLabel, onAction){
@@ -266,20 +314,31 @@ function render(){
 
     const modes = document.createElement("div");
     modes.className = "meal-modes";
+    const seg = document.createElement("div");
+    seg.className = "seg-track";
+    const thumb = document.createElement("div");
+    thumb.className = "seg-thumb";
+    seg.appendChild(thumb);
+    const positionThumb = (btn)=>{ thumb.style.width = btn.offsetWidth + "px"; thumb.style.left = btn.offsetLeft + "px"; };
     const views = {};
     const labels = { groups:"Grupos", foods:"Alimentos", meals:"Comidas" };
+    let firstChip = null;
     for (const mode in labels){
       const b = document.createElement("button");
       b.className = "mchip" + (mode==="groups" ? " on" : "");
       b.textContent = labels[mode];
       b.onclick = ()=>{
-        modes.querySelectorAll(".mchip").forEach(x=>x.classList.remove("on"));
+        seg.querySelectorAll(".mchip").forEach(x=>x.classList.remove("on"));
         b.classList.add("on");
         for (const k in views) views[k].style.display = (k===mode) ? "block" : "none";
+        positionThumb(b);
       };
-      modes.appendChild(b);
+      seg.appendChild(b);
+      if (!firstChip) firstChip = b;
     }
+    modes.appendChild(seg);
     content.appendChild(modes);
+    requestAnimationFrame(()=> positionThumb(firstChip));
 
     const gv = document.createElement("div");
     for(const fn in foods){
@@ -287,7 +346,7 @@ function render(){
       const row = document.createElement("div");
       row.className = "food-row";
       row.innerHTML = `
-        <span class="food-name">${foods[fn].icon} ${fn} <span class="info">ⓘ</span></span>
+        <span class="food-name">${groupIconHTML(fn)}${fn} <span class="info">ⓘ</span></span>
         <div class="controls"><button aria-label="Restar ${fn}">−</button><span class="qty">${qty}</span><button aria-label="Sumar ${fn}">+</button></div>`;
       const btns = row.querySelectorAll(".controls button");
       const qtySpan = row.querySelector(".qty");
@@ -339,7 +398,7 @@ function render(){
     mv.style.display = "none";
     const tIds = Object.keys(myMeals);
     if (!tIds.length){
-      mv.innerHTML = `<div class="empty"><span class="e-ico">⭐</span><p>Registra esta comida y guárdala como plantilla para repetirla en 1 toque.</p></div>`;
+      mv.innerHTML = `<div class="empty">${emptyIconHTML("star")}<p>Registra esta comida y guárdala como plantilla para repetirla en 1 toque.</p></div>`;
     }
     tIds.forEach(id=>{
       const row = document.createElement("div");
@@ -459,12 +518,12 @@ function renderFoodList(){
       top.forEach(paint);
       const h2 = document.createElement("div"); h2.className = "hint"; h2.textContent = "Escribe para buscar más…"; list.appendChild(h2);
     } else {
-      list.innerHTML = `<div class="empty"><span class="e-ico">🍽</span><p>Escribe para buscar en tu base y la mini-DB.</p></div>`;
+      list.innerHTML = `<div class="empty">${emptyIconHTML("plate")}<p>Escribe para buscar en tu base y la mini-DB.</p></div>`;
     }
     return;
   }
   const matches = Object.keys(all).filter(id => matchesQuery(all[id].name, q));
-  if (!matches.length){ list.innerHTML = `<div class="empty"><span class="e-ico">🔎</span><p>Sin resultados. Créalo en 🗂 Gestión.</p></div>`; return; }
+  if (!matches.length){ list.innerHTML = `<div class="empty">${emptyIconHTML("search")}<p>Sin resultados. Créalo en 🗂 Gestión.</p></div>`; return; }
   matches.forEach(paint);
 }
 document.getElementById("foodSearch").oninput = renderFoodList;
@@ -544,7 +603,7 @@ async function searchOFF(){
     const data = await res.json();
     const products = (data.products || []).filter(p => { const n=p.nutriments||{}; return p.product_name && (n["energy-kcal_100g"]!=null || n["energy_100g"]!=null); });
     box.innerHTML = "";
-    if (!products.length){ box.innerHTML = `<div class="empty"><span class="e-ico">🌐</span><p>Sin resultados en Open Food Facts. Prueba en inglés o créalo manual.</p></div>`; return; }
+    if (!products.length){ box.innerHTML = `<div class="empty">${emptyIconHTML("globe")}<p>Sin resultados en Open Food Facts. Prueba en inglés o créalo manual.</p></div>`; return; }
     products.forEach(p=>{
       const n = p.nutriments || {};
       const kcal = Math.round(n["energy-kcal_100g"] != null ? n["energy-kcal_100g"] : (n["energy_100g"]||0)/4.184);
@@ -565,7 +624,7 @@ async function searchOFF(){
     if (!matches.length){
       const em = document.createElement("div");
       em.className = "empty";
-      em.innerHTML = `<span class="e-ico">🔎</span><p>Tampoco está en tu base local. Créalo manual arriba.</p>`;
+      em.innerHTML = `${emptyIconHTML("search")}<p>Tampoco está en tu base local. Créalo manual arriba.</p>`;
       box.appendChild(em);
       return;
     }
@@ -603,9 +662,9 @@ async function lookupBarcode(code){
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (data.status === 1 && data.product && data.product.product_name) applyOFFProduct(data.product);
-    else box.innerHTML = `<div class="empty"><span class="e-ico">📦</span><p>Producto no encontrado en Open Food Facts. Créalo manual arriba.</p></div>`;
+    else box.innerHTML = `<div class="empty">${emptyIconHTML("package")}<p>Producto no encontrado en Open Food Facts. Créalo manual arriba.</p></div>`;
   } catch(e){
-    box.innerHTML = `<div class="empty"><span class="e-ico">📡</span><p>No se pudo contactar Open Food Facts (${e && e.message ? e.message : "revisa tu red"}). Crea el alimento manual arriba.</p></div>`;
+    box.innerHTML = `<div class="empty">${emptyIconHTML("signal")}<p>No se pudo contactar Open Food Facts (${e && e.message ? e.message : "revisa tu red"}). Crea el alimento manual arriba.</p></div>`;
   }
 }
 
@@ -631,7 +690,7 @@ function renderMyFoods(){
   const list = document.getElementById("myFoodsList");
   list.innerHTML = "";
   const ids = Object.keys(customFoods);
-  if (!ids.length){ list.innerHTML = `<div class="empty"><span class="e-ico">🧺</span><p>Tu base personal está vacía. Busca, escanea o crea tu primer alimento.</p></div>`; return; }
+  if (!ids.length){ list.innerHTML = `<div class="empty">${emptyIconHTML("basket")}<p>Tu base personal está vacía. Busca, escanea o crea tu primer alimento.</p></div>`; return; }
   ids.forEach(id=>{
     const f = customFoods[id];
     const row = document.createElement("div");
@@ -651,7 +710,7 @@ function renderTemplatesInline(){
   const list = document.getElementById("myTemplatesList");
   list.innerHTML = "";
   const ids = Object.keys(myMeals);
-  if (!ids.length){ list.innerHTML = `<div class="empty"><span class="e-ico">⭐</span><p>Guarda comidas repetidas desde 📋 Registro (modo "Comidas").</p></div>`; return; }
+  if (!ids.length){ list.innerHTML = `<div class="empty">${emptyIconHTML("star")}<p>Guarda comidas repetidas desde 📋 Registro (modo "Comidas").</p></div>`; return; }
   ids.forEach(id=>{
     const t = myMeals[id];
     const row = document.createElement("div");
@@ -698,7 +757,7 @@ function renderBaseList(){
   const ids = Object.keys(all)
     .filter(id => matchesQuery(all[id].name, q))
     .sort((a,b) => all[a].name.localeCompare(all[b].name, "es"));
-  if (!ids.length){ list.innerHTML = `<div class="empty"><span class="e-ico">🗄️</span><p>Sin resultados.</p></div>`; return; }
+  if (!ids.length){ list.innerHTML = `<div class="empty">${emptyIconHTML("database")}<p>Sin resultados.</p></div>`; return; }
   ids.forEach(id=>{
     const f = all[id];
     const overridden = !!miniDbOverrides[id];
@@ -788,7 +847,7 @@ function updateGroups(){
     const target = goals.groups[fn] || 0;
     const chip = document.createElement("div");
     chip.className = "chip" + (target > 0 && sum >= target ? " done" : "");
-    chip.innerHTML = `<span class="ico">${foods[fn].icon}</span>${sum}/${target}`;
+    chip.innerHTML = `<span class="ico">${groupIconHTML(fn,"sm")}</span>${sum}/${target}`;
     grid.appendChild(chip);
   }
 }
@@ -803,7 +862,7 @@ function updateWater(){
   for(let i=0;i<drops;i++){
     const d = document.createElement("span");
     d.className = "drop" + (count >= (i+1)*250 ? " on" : "");
-    d.textContent = "💧";
+    d.innerHTML = iconSvg("droplet");
     d.setAttribute("role","button");
     d.setAttribute("aria-label", "Agua " + ((i+1)*250) + " ml");
     d.onclick = ()=>{
@@ -820,7 +879,7 @@ function updateWeight(){
   const deltaEl = document.getElementById("weightDelta");
   const input = document.getElementById("weightInput");
   const emptyEl = document.getElementById("weightEmpty");
-  emptyEl.innerHTML = dates.length ? "" : `<div class="empty"><span class="e-ico">⚖️</span><p>Registra tu primer peso para ver la tendencia.</p></div>`;
+  emptyEl.innerHTML = dates.length ? "" : `<div class="empty">${emptyIconHTML("scale")}<p>Registra tu primer peso para ver la tendencia.</p></div>`;
   if (dates.length){
     const last = weightData[dates[dates.length-1]];
     nowEl.textContent = last + " kg";
@@ -878,7 +937,7 @@ function updateHistory(){
     if (k > 0){ rec++; sum += k; if (k >= goals.kcal*0.9 && k <= goals.kcal*1.1) on++; }
   }
   document.getElementById("histSummary").innerHTML = rec === 0
-    ? `<div class="empty" style="grid-column:1/-1"><span class="e-ico">🗓</span><p>Sin registros este mes. ¡Hoy es un buen día para empezar!</p></div>`
+    ? `<div class="empty" style="grid-column:1/-1">${emptyIconHTML("calendar")}<p>Sin registros este mes. ¡Hoy es un buen día para empezar!</p></div>`
     : `<div class="stat"><div class="big">${rec}</div><div class="lbl">registrados</div></div>
        <div class="stat"><div class="big">${on}</div><div class="lbl">en meta</div></div>
        <div class="stat"><div class="big">${Math.round(sum/rec)}</div><div class="lbl">kcal promedio</div></div>`;
@@ -1285,7 +1344,8 @@ function buildGoalsInputs(){
     const div = document.createElement("div");
     div.className = "field"; div.style.marginBottom = "0";
     const label = document.createElement("label");
-    label.textContent = foods[fn].icon + " " + fn;
+    label.style.display = "flex"; label.style.alignItems = "center"; label.style.gap = "8px";
+    label.innerHTML = groupIconHTML(fn,"sm") + fn;
     const inp = document.createElement("input");
     inp.type = "number"; inp.inputMode = "numeric"; inp.value = goals.groups[fn];
     inp.oninput = ()=>{ goals.groups[fn] = Math.max(0, parseInt(inp.value)||0); saveGoals(); updateGroups(); };
