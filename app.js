@@ -1,5 +1,5 @@
 if ('caches' in window) {
-  caches.keys().then(keys => keys.forEach(k => { if (k !== 'caloriasfit-v6' && k !== 'soto-v1') caches.delete(k); }));
+  caches.keys().then(keys => keys.forEach(k => { if (k !== 'caloriasfit-v7' && k !== 'soto-v1') caches.delete(k); }));
 }
 
 const DEFAULT_FOODS = {
@@ -110,14 +110,14 @@ const ICON_PATHS = {
   signal:     `<path d="M2 12a15 15 0 0 1 20 0"/><path d="M5 15.5a10 10 0 0 1 14 0"/><path d="M8.5 19a5 5 0 0 1 7 0"/><circle cx="12" cy="22" r="1"/>`
 };
 const GROUP_META = {
-  "Fruta":          { color:"#FF3B30", icon:"apple" },
-  "Vegetal":        { color:"#34C759", icon:"leaf" },
-  "Carbohidrato":   { color:"#FF9500", icon:"bowl" },
-  "Proteína Magra": { color:"#0A84FF", icon:"drumstick" },
-  "Proteína Media": { color:"#5E5CE6", icon:"drumstick" },
-  "Grasa":          { color:"#D4A017", icon:"droplet" },
-  "Fruto Seco":     { color:"#A2703A", icon:"acorn" },
-  "Lácteo":         { color:"#0091C2", icon:"milk" }
+  "Fruta":          { color:"#FF3B30", emoji:"🍎" },
+  "Vegetal":        { color:"#34C759", emoji:"🥦" },
+  "Carbohidrato":   { color:"#FF9500", emoji:"🍚" },
+  "Proteína Magra": { color:"#0A84FF", emoji:"🐔" },
+  "Proteína Media": { color:"#5E5CE6", emoji:"🥩" },
+  "Grasa":          { color:"#D4A017", emoji:"🥑" },
+  "Fruto Seco":     { color:"#A2703A", emoji:"🥜" },
+  "Lácteo":         { color:"#0091C2", emoji:"🥛" }
 };
 function hexToRgba(hex, a){
   const h = hex.replace("#","");
@@ -131,7 +131,7 @@ function groupIconHTML(name, size){
   const meta = GROUP_META[name];
   if (!meta) return "";
   const cls = size === "sm" ? "grp-badge sm" : "grp-badge";
-  return `<span class="${cls}" style="--ic:${meta.color};--ic-bg:${hexToRgba(meta.color,0.14)}">${iconSvg(meta.icon)}</span>`;
+  return `<span class="${cls}" style="--ic-bg:${hexToRgba(meta.color,0.14)}">${meta.emoji}</span>`;
 }
 function emptyIconHTML(name){
   return `<span class="e-ico">${iconSvg(name)}</span>`;
@@ -223,6 +223,16 @@ function animateNumber(el, to){
     if (p < 1) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+}
+
+function updateTopHeader(){
+  const el = document.getElementById("topGreeting");
+  const pill = document.getElementById("topStatPill");
+  if (!el || !pill) return;
+  const hour = new Date().getHours();
+  el.textContent = hour < 12 ? "Buenos días ☀️" : hour < 19 ? "Buenas tardes 🌤️" : "Buenas noches 🌙";
+  const t = dayTotals(datePicker.value);
+  pill.innerHTML = `🔥 ${t.k}/${goals.kcal} kcal`;
 }
 
 /* ---------- CÁLCULOS ---------- */
@@ -419,7 +429,7 @@ function render(){
     container.appendChild(mealDiv);
   });
 
-  updateStats(); updateGroups(); updateWater(); updateWeight(); updateHistory(); updateMicros(); updateSummary(); updateChart();
+  updateStats(); updateGroups(); updateWater(); updateWeight(); updateHistory(); updateMicros(); updateSummary(); updateChart(); updateTopHeader();
   checkPattern();
 }
 
