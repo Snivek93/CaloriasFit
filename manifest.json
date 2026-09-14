@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Kcal — Nutrición Simple",
-  "short_name": "Kcal",
+  "name": "Kcalma — Nutrición Simple",
+  "short_name": "Kcalma",
   "description": "Registro de comidas, macros, agua y peso con diseño minimalista.",
   "start_url": "./",
   "scope": "./",
