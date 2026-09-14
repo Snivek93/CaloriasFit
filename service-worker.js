@@ -1,10 +1,10 @@
-const CACHE_NAME = 'caloriasfit-v4';
+const CACHE_NAME = 'caloriasfit-v5';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll(['./', 'manifest.json', 'icon-192.png', 'icon-512.png'])
+      cache.addAll(['./', 'manifest.json', 'icon-192.png', 'icon-512.png', 'app.js', 'styles.css', 'guide.js', 'foods-db.js'])
     )
   );
 });
