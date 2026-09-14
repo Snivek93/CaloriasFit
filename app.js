@@ -997,7 +997,7 @@ function updateChart(){
 }
 document.getElementById("shareBtn").onclick = async ()=>{
   const s = calcStats();
-  const text = "🥗 CaloríasFit\n📅 Promedio 7 días: " + s.avg + " kcal\n🎯 Días en meta: " + Math.round(s.adherence*7/100) + "/7\n🔥 Racha: " + s.streak + " días\n💪 ¡Sigamos!";
+  const text = "🥗 Kcal\n📅 Promedio 7 días: " + s.avg + " kcal\n🎯 Días en meta: " + Math.round(s.adherence*7/100) + "/7\n🔥 Racha: " + s.streak + " días\n💪 ¡Sigamos!";
   if (navigator.share){ try { await navigator.share({ text }); return; } catch(e){ return; } }
   try { await navigator.clipboard.writeText(text); snack("Resumen copiado 📋"); } catch(e){ alert(text); }
 };
@@ -1019,7 +1019,7 @@ document.getElementById("csvBtn").onclick = ()=>{
   const blob = new Blob([lines.join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = "caloriasfit-reporte-" + getDS(new Date()) + ".csv";
+  a.href = url; a.download = "kcal-reporte-" + getDS(new Date()) + ".csv";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
   snack("Reporte CSV descargado 📄");
@@ -1029,11 +1029,11 @@ document.getElementById("pdfBtn").onclick = ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(14);
-  doc.text("CaloríasFit — Reporte últimos 30 días", 14, 16);
+  doc.text("Kcal — Reporte últimos 30 días", 14, 16);
   doc.setFontSize(9);
   doc.text("Generado: " + new Date().toLocaleDateString(), 14, 22);
   doc.autoTable({ head: [REPORT_HEAD], body: reportRows(), startY: 26, styles: { fontSize: 7.5 } });
-  doc.save("caloriasfit-reporte-" + getDS(new Date()) + ".pdf");
+  doc.save("kcal-reporte-" + getDS(new Date()) + ".pdf");
   snack("Reporte PDF descargado 📄");
 };
 
@@ -1191,12 +1191,12 @@ function renderGuideList(){
 
 /* ---------- RESPALDO ---------- */
 function exportBackup(){
-  const payload = { app: "CaloriasFit", version: 6, exportedAt: new Date().toISOString(), nutritionData: dataStore, weightData: weightData, goals: goals, customFoods: customFoods, myMeals: myMeals, meals: meals, foodUsage: foodUsage, miniDbOverrides: miniDbOverrides };
+  const payload = { app: "Kcal", version: 6, exportedAt: new Date().toISOString(), nutritionData: dataStore, weightData: weightData, goals: goals, customFoods: customFoods, myMeals: myMeals, meals: meals, foodUsage: foodUsage, miniDbOverrides: miniDbOverrides };
   const json = JSON.stringify(payload, null, 2);
-  const filename = "caloriasfit-respaldo-" + getDS(new Date()) + ".json";
+  const filename = "kcal-respaldo-" + getDS(new Date()) + ".json";
   try {
     const file = new File([json], filename, { type: "application/json" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: "Respaldo CaloríasFit" }).catch(()=>{}); return; }
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: "Respaldo Kcal" }).catch(()=>{}); return; }
   } catch(e){}
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -1243,7 +1243,7 @@ importFile.onchange = ()=>{
       const sum = document.getElementById("importSummary");
       if (sum){ sum.textContent = describeImport(data); sum.style.display = "block"; }
       clearTimeout(importTimer); importTimer = setTimeout(resetImport, 8000);
-    } catch(e){ alert("El archivo no es un respaldo válido de CaloríasFit."); }
+    } catch(e){ alert("El archivo no es un respaldo válido de Kcal."); }
     importFile.value = "";
   };
   reader.readAsText(f);
@@ -1297,7 +1297,7 @@ function checkReminders(){
     if (mealTotals(date, meal).k > 0) return;
     notified[key] = 1;
     localStorage.setItem("notified", JSON.stringify(notified));
-    notify("CaloríasFit", "Hora de tu " + meal + " 🍽️");
+    notify("Kcal", "Hora de tu " + meal + " 🍽️");
   });
 }
 let remInterval = null;
