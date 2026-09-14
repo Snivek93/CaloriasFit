@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caloriasfit-v6';
+const CACHE_NAME = 'caloriasfit-v7';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
