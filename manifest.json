@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "CaloríasFit — Vida Saludable",
-  "short_name": "CaloríasFit",
+  "name": "Kcal — Nutrición Simple",
+  "short_name": "Kcal",
   "description": "Registro de comidas, macros, agua y peso con diseño minimalista.",
   "start_url": "./",
   "scope": "./",
