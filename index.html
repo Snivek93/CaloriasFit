@@ -507,6 +507,7 @@ function saveMeals(){ localStorage.setItem("mealsConfig", JSON.stringify(meals))
 function saveUsage(){ localStorage.setItem("foodUsage", JSON.stringify(foodUsage)); }
 function allRealFoods(){ return Object.assign({}, (typeof MINI_FOODS!=="undefined"?MINI_FOODS:{}), customFoods); }
 function round1(n){ return Math.round(n*10)/10; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c])); }
 
 /* ---------- SNACKBAR ---------- */
 let snackTimer = null;
@@ -670,7 +671,7 @@ function render(){
     const header = document.createElement("div");
     header.className = "meal-header";
     header.innerHTML = `
-      <span class="meal-left">${meal}</span>
+      <span class="meal-left">${escapeHtml(meal)}</span>
       <div class="meal-right">
         <div class="meal-kcal">${t.k} kcal</div>
         <div class="meal-macros">C:${t.c}g P:${t.p}g G:${t.f}g</div>
@@ -725,9 +726,9 @@ function render(){
       const row = document.createElement("div");
       row.className = "food-row";
       row.innerHTML = `
-        <span class="food-name">🍽 ${fd.name} <span class="info">· ${Math.round(fd.per100.kcal*g/100)} kcal</span></span>
+        <span class="food-name">🍽 ${escapeHtml(fd.name)} <span class="info">· ${Math.round(fd.per100.kcal*g/100)} kcal</span></span>
         <div class="controls"><button aria-label="Menos">−</button><span class="qty">${g}g</span><button aria-label="Más">+</button></div>
-        <button class="del-btn" aria-label="Quitar ${fd.name}">×</button>`;
+        <button class="del-btn" aria-label="Quitar ${escapeHtml(fd.name)}">×</button>`;
       const btns = row.querySelectorAll(".controls button");
       const qtySpan = row.querySelector(".qty");
       btns[0].onclick = ()=>{ changeCustom(date, meal, id, -5); };
@@ -761,7 +762,7 @@ function render(){
     tIds.forEach(id=>{
       const row = document.createElement("div");
       row.className = "row-action";
-      row.innerHTML = `<span>⭐ ${myMeals[id].name}</span><span>＋</span>`;
+      row.innerHTML = `<span>⭐ ${escapeHtml(myMeals[id].name)}</span><span>＋</span>`;
       row.onclick = ()=>{ useTemplateFor(date, meal, id); };
       mv.appendChild(row);
     });
@@ -865,7 +866,7 @@ function renderFoodList(){
     const f = all[id];
     const el = document.createElement("div");
     el.className = "flist-item";
-    el.innerHTML = `<span>${f.name}${customFoods[id]?" ✏️":""}</span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span>`;
+    el.innerHTML = `<span>${escapeHtml(f.name)}${customFoods[id]?" ✏️":""}</span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span>`;
     el.onclick = ()=> openAddView(id);
     list.appendChild(el);
   };
@@ -967,7 +968,7 @@ async function searchOFF(){
       const kcal = Math.round(n["energy-kcal_100g"] != null ? n["energy-kcal_100g"] : (n["energy_100g"]||0)/4.184);
       const el = document.createElement("div");
       el.className = "flist-item";
-      el.innerHTML = `<span>${p.product_name}${p.brands?" <span class='m'>"+p.brands+"</span>":""}</span><span class="m">${kcal} kcal/100g</span>`;
+      el.innerHTML = `<span>${escapeHtml(p.product_name)}${p.brands?" <span class='m'>"+escapeHtml(p.brands)+"</span>":""}</span><span class="m">${kcal} kcal/100g</span>`;
       el.onclick = ()=> applyOFFProduct(p);
       box.appendChild(el);
     });
@@ -990,7 +991,7 @@ async function searchOFF(){
       const f = all[id];
       const el = document.createElement("div");
       el.className = "flist-item";
-      el.innerHTML = `<span>${f.name}</span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span>`;
+      el.innerHTML = `<span>${escapeHtml(f.name)}</span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span>`;
       el.onclick = ()=> applyLocalFood(f);
       box.appendChild(el);
     });
@@ -1053,7 +1054,7 @@ function renderMyFoods(){
     const f = customFoods[id];
     const row = document.createElement("div");
     row.className = "flist-item";
-    row.innerHTML = `<span>${f.name} <span class="m">${f.src==="off"?"🌐":"✏️"}</span></span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span><button class="del-btn" aria-label="Eliminar ${f.name}">🗑</button>`;
+    row.innerHTML = `<span>${escapeHtml(f.name)} <span class="m">${f.src==="off"?"🌐":"✏️"}</span></span><span class="m">${Math.round(f.per100.kcal)} kcal/100g</span><button class="del-btn" aria-label="Eliminar ${escapeHtml(f.name)}">🗑</button>`;
     row.querySelector(".del-btn").onclick = ()=>{
       const stash = customFoods[id];
       delete customFoods[id]; saveCustomFoods(); renderMyFoods(); render();
@@ -1073,7 +1074,7 @@ function renderTemplatesInline(){
     const t = myMeals[id];
     const row = document.createElement("div");
     row.className = "flist-item";
-    row.innerHTML = `<span>⭐ ${t.name}<br><span class="m">${Object.keys(t.groups||{}).length} grupos · ${Object.keys(t.custom||{}).length} alimentos</span></span><button class="del-btn" aria-label="Eliminar plantilla">🗑</button>`;
+    row.innerHTML = `<span>⭐ ${escapeHtml(t.name)}<br><span class="m">${Object.keys(t.groups||{}).length} grupos · ${Object.keys(t.custom||{}).length} alimentos</span></span><button class="del-btn" aria-label="Eliminar plantilla">🗑</button>`;
     row.querySelector(".del-btn").onclick = ()=>{
       const stash = myMeals[id];
       delete myMeals[id]; saveMyMeals(); renderTemplatesInline(); render();
